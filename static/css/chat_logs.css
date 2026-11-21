@@ -24,10 +24,13 @@
     background: transparent;
     position: absolute;
     left: -30px;
+    color: var(--text-primary);
 }
 
-.chat-message-hammer:hover {
+.chat-message-hammer:hover,
+.chat-message-hammer:focus-visible {
     background: transparent;
+    color: var(--background-accent-primary);
 }
 
 .columns > .column > div {

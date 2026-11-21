@@ -130,19 +130,7 @@ $(document).ready(function () {
                     chartOpts.data.datasets[7].data.push(decoded.history[labels[i]].total);
                 }
 
-                if (
-                    window.matchMedia
-                    && (
-                        (window.matchMedia('(prefers-color-scheme: dark)').matches
-                            && !(getMeta('theme-opposite') === 'True'))
-                        || (!window.matchMedia('(prefers-color-scheme: dark)').matches
-                            && (getMeta('theme-opposite') === 'True'))
-                    )
-                ) {
-                    chartOpts.options.legend.labels.fontColor = '#FFFFFF';
-                    chartOpts.options.scales.xAxes[0].gridLines.color = 'rgba(255, 255, 255, 0.1)';
-                    chartOpts.options.scales.yAxes[0].gridLines.color = 'rgba(255, 255, 255, 0.1)';
-                }
+                applyChartTheme(chartOpts.options);
 
                 console.log(chartOpts);
 
@@ -167,4 +155,23 @@ $(document).ready(function () {
     }).catch(function (e) {
         logException(e);
     });
+});
+
+function applyChartTheme(options) {
+    const dark = isDarkTheme();
+    const text = dark ? '#DBDBDB' : '#666';
+
+    options.legend.labels.fontColor = dark ? '#FFFFFF' : '#666';
+    for (const axis of [options.scales.xAxes[0], options.scales.yAxes[0]]) {
+        axis.gridLines.color = dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        axis.ticks = Object.assign(axis.ticks || {}, {fontColor: text});
+    }
+}
+
+$(document).on('gb:themechange', function () {
+    if (!window.gbGraph)
+        return;
+
+    applyChartTheme(window.gbGraph.options);
+    window.gbGraph.update();
 });

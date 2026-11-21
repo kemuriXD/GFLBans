@@ -28,9 +28,8 @@ class SetDark(BaseModel):
 
 
 @web_router.get('/toggle_theme')
-async def toggle_theme(request: Request):
-    if 'opposite_theme' in request.session:
-        request.session['opposite_theme'] = not request.session['opposite_theme']
-    else:
-        request.session['opposite_theme'] = True
+async def toggle_theme(request: Request, opposite: bool | None = None):
+    if opposite is None:
+        opposite = not request.session.get('opposite_theme', False)
+    request.session['opposite_theme'] = opposite
     return Response(status_code=204)

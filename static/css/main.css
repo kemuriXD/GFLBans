@@ -69,6 +69,49 @@
     filter: brightness(70%);
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.3s;
+    animation-timing-function: ease;
+}
+
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease,
+        color 0.3s ease !important;
+}
+
+@keyframes theme-icon-in {
+    from {
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.6);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+#dark-mode-toggle.is-switching i {
+    animation: theme-icon-in 0.35s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+    }
+
+    #dark-mode-toggle.is-switching i {
+        animation: none;
+    }
+}
+
 .theme-opposite #server_map {
     filter: none;
 }

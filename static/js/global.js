@@ -123,15 +123,22 @@ $(document).ready(function () {
 
     // Switch between light and dark mode
     $('#dark-mode-toggle').click(function () {
+        const opposite = !(pendingOppositeTheme ?? isOppositeTheme());
+        const request = ++themeRequest;
 
-        gbRequest('GET', '/toggle_theme').then(resp => {
-            if (resp.ok) {
-                location.reload();
-            } else {
-                const errorData = resp.json();
-                throw new Error(errorData.detail || defaultAPIError);
-            }
+        pendingOppositeTheme = opposite;
+        const switched = switchThemeAnimated(opposite, this);
+        switched.then(() => {
+            if (request === themeRequest)
+                pendingOppositeTheme = null;
+        });
+
+        gbRequest('GET', '/toggle_theme?opposite=' + opposite).then(resp => {
+            if (!resp.ok)
+                throw new Error(defaultAPIError);
         }).catch(function (e) {
+            if (request === themeRequest)
+                switched.then(() => setOppositeTheme(!opposite));
             logException(e);
         });
     });
@@ -147,6 +154,48 @@ $(document).ready(function () {
         closeModals();
     });
 });
+
+let pendingOppositeTheme = null;
+let themeRequest = 0;
+
+function isOppositeTheme() {
+    return document.documentElement.classList.contains('theme-opposite');
+}
+
+function isDarkTheme() {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches !== isOppositeTheme();
+}
+
+function setOppositeTheme(opposite) {
+    document.documentElement.classList.toggle('theme-opposite', opposite);
+    $('#dark-mode-toggle').attr('data-modeset', opposite ? 'opposite' : '');
+    $('meta[name="theme-opposite"]').attr('content', opposite ? 'True' : 'False');
+    $(document).trigger('gb:themechange');
+}
+
+function switchThemeAnimated(opposite, toggle) {
+    const apply = () => setOppositeTheme(opposite);
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        apply();
+        return Promise.resolve();
+    }
+
+    $(toggle).removeClass('is-switching');
+    void toggle.offsetWidth;
+    $(toggle).addClass('is-switching');
+    clearTimeout(toggle.switchingTimer);
+    toggle.switchingTimer = setTimeout(() => $(toggle).removeClass('is-switching'), 400);
+
+    if (typeof document.startViewTransition === 'function')
+        return document.startViewTransition(apply).updateCallbackDone;
+
+    const root = document.documentElement;
+    root.classList.add('theme-transition');
+    apply();
+    setTimeout(() => root.classList.remove('theme-transition'), 350);
+    return Promise.resolve();
+}
 
 function closeModals() {
     $('.modal').removeClass('is-active');
